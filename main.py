@@ -1,4 +1,4 @@
-import requests, random, time, json, csv
+import requests, random, time, json, csv, os
 from datetime import datetime
 #VARs;
 headers = {
@@ -91,12 +91,135 @@ def save_csv(data, filename = "jobs"):
         writer.writeheader()
         writer.writerows(data)
 
-companies = ["stripe", "figma", "notion"]
+POPULAR_COMPANIES = [
+    "stripe",
+    "anthropic",
+    "vercel",
+    "airbnb",
+    "instacart",
+    "asana",
+    "brex",
+    "coinbase",
+    "webflow",
+    "gusto",
+    "mercury",
+]
 
-data = scraper(companies = companies)
-save_csv(data)
-save_json(data)
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
 
+def add_company():
+    print("\nPopular working Greenhouse slugs:\n")
+
+    for company in POPULAR_COMPANIES:
+        print("-", company)
+
+    print("\nFind more available companies here:")
+    print("https://job-boards.greenhouse.io")
+
+    slug = input("\nEnter company slug: ").strip().lower()
+    return slug
+
+def validate_company(company):
+    resp = fetch(f"https://boards-api.greenhouse.io/v1/boards/{company}/jobs")
+    return resp is not None
+
+def menu():
+    selected = []
+    jobs = []
+
+    while True:
+        clear_screen()
+        print("=" * 50)
+        print("        GREENHOUSE JOB SCRAPER")
+        print("=" * 50)
+        print(f"Selected companies: {len(selected)}")
+        print(f"Scraped jobs: {len(jobs)}")
+        print("=" * 50)
+        print("1. Add company slug")
+        print("2. Show selected companies")
+        print("3. Scrape all jobs")
+        print("4. Scrape remote-only jobs")
+        print("5. Save jobs as JSON")
+        print("6. Save jobs as CSV")
+        print("0. Exit")
+        print("=" * 50)
+
+        choice = input("Choose: ").strip()
+
+        if choice == "1":
+            company = add_company()
+
+            if not company:
+                input("Invalid slug. Press Enter...")
+                continue
+
+            if company in selected:
+                input("Company already selected. Press Enter...")
+                continue
+
+            print(f"Checking {company}...")
+
+            if validate_company(company):
+                selected.append(company)
+                input(f"{company} added successfully. Press Enter...")
+            else:
+                input(f"{company} is not a valid Greenhouse board. Press Enter...")
+
+        elif choice == "2":
+            if not selected:
+                input("No companies selected. Press Enter...")
+                continue
+
+            print("\nSelected companies:\n")
+            for company in selected:
+                print("-", company)
+
+            input("\nPress Enter...")
+
+        elif choice == "3":
+            if not selected:
+                input("No companies selected. Press Enter...")
+                continue
+
+            jobs = scraper(selected)
+            input(f"{len(jobs)} jobs scraped. Press Enter...")
+
+        elif choice == "4":
+            if not selected:
+                input("No companies selected. Press Enter...")
+                continue
+
+            jobs = scraper(selected, filter_remote=True)
+            input(f"{len(jobs)} remote jobs scraped. Press Enter...")
+
+        elif choice == "5":
+            if not jobs:
+                input("No jobs scraped. Press Enter...")
+                continue
+
+            filename = input("Enter JSON filename: ").strip()
+            save_json(jobs, filename)
+            input("Saved successfully. Press Enter...")
+
+        elif choice == "6":
+            if not jobs:
+                input("No jobs scraped. Press Enter...")
+                continue
+
+            filename = input("Enter CSV filename: ").strip()
+            save_csv(jobs, filename)
+            input("Saved successfully. Press Enter...")
+
+        elif choice == "0":
+            print("Goodbye.")
+            break
+
+        else:
+            input("Invalid choice. Press Enter...")
+
+if __name__ == "__main__":
+    menu()
 
 
 
