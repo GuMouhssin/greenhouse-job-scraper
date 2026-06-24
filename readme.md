@@ -47,7 +47,7 @@ https://job-boards.greenhouse.io
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/greenhouse-job-scraper.git
+git clone https://github.com/GuMouhssin/greenhouse-job-scraper.git
 cd greenhouse-job-scraper
 ```
 
